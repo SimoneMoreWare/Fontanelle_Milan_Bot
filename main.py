@@ -1,12 +1,14 @@
 import telebot
 from telebot import types
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+
 from math import radians, cos, sin, asin, sqrt
 
 
 FILENAME = "map.csv"
-API_TOKEN = ''
+API_TOKEN = ':'
 bot = telebot.TeleBot(API_TOKEN)
-
+totalmap_string="Mappa completa delle vedovelle"
 def leggidati(file_name):
     
     dati = []
@@ -37,7 +39,8 @@ def leggidati(file_name):
 def send_welcome(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     itembtn1 = types.KeyboardButton('Manda La tua posizione', request_location=True)
-    markup.add(itembtn1)
+    itembtn2 = types.KeyboardButton(totalmap_string)
+    markup.add(itembtn1,itembtn2)
     bot.send_message(message.chat.id, """Le fontanelle nel capoluogo lombardo (in totale sono 668) hanno una lunga storia e una tradizione interessante, tanto da poter vantare ben due soprannomi. 
     Il primo è quello di “vedovelle”, che deriva dal getto d’acqua continuo, paragonabile a quello di una donna in lutto che piange per la propria perdita. 
     E poi c’è la dicitura di “drago verde”, un nome che unisce il caratteristico colore della struttura – un verde ramarro – e la bocca in ghisa a forma di drago (ma ne esistono anche con altri animali).\
@@ -50,8 +53,11 @@ Ciao, per favore mandami la tua posizione per trovare la vedovella più vicina�
 # Handle all other messages with content_type 'text' (content_types defaults to ['text'])
 @bot.message_handler(func=lambda message: True)
 def echo_message(message):
-    bot.reply_to(message,"""Non riesco a capire, per favore mandami la tua posizione per trovare la vedovella più vicina📍\
+    if (message.text)!=totalmap_string:
+        bot.reply_to(message,"""Non riesco a capire, per favore mandami la tua posizione per trovare la vedovella più vicina📍\
 """)
+    else:
+        sendlinkmap(message)
  
  #in questo modo mando la posizione tramite send_location e per ricavare le latitudini e longitudine utilizzo il campo 'location' e lat o lng ecc...
  #la parte importante è la prima riga in cui devo specificicare il content_types=["location"]
@@ -94,4 +100,14 @@ def distance(lat1,lon1, lat2, lon2):
     r = 6371
     return((c * r)*1000)
 
-bot.polling()
+def sendlinkmap(message):
+    bot.send_message(message.chat.id, "Ecco qua⬇️", reply_markup=gen_markup())
+
+def gen_markup():
+    markup = InlineKeyboardMarkup()
+    markup.row_width = 1
+    markup.add(InlineKeyboardButton("Mappa", url='https://www.fontanelle.org/Mappa-Fontanelle-Milano-Lombardia.aspx'),)
+    return markup
+
+
+bot.infinity_polling()
